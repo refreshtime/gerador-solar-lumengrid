@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Lumen Grid — Proposta Solar</title>
@@ -1690,20 +1691,31 @@ async function downloadPDF(){
     let pdf=null;
 
     for(let i=0;i<pages.length;i++){
-      btn.textContent='Renderizando p.'+( i+1)+'/'+pages.length+'...';
-      const canvas=await html2canvas(pages[i],{
-        scale:2,useCORS:true,logging:false,
-        backgroundColor:'#ffffff',
-        allowTaint:true
+      btn.textContent='Renderizando '+(i+1)+'/'+pages.length+'...';
+      const el=pages[i];
+      const elW=el.offsetWidth;
+      const elH=el.offsetHeight;
+
+      const canvas=await html2canvas(el,{
+        scale:2,
+        useCORS:true,
+        allowTaint:true,
+        logging:false,
+        backgroundColor:null,
+        imageTimeout:15000,
+        windowWidth:1200
       });
-      const w=canvas.width;
-      const h=canvas.height;
+
+      // Usa dimensões reais do elemento (não do canvas 2x)
+      const pW=elW*2;
+      const pH=elH*2;
+
       if(!pdf){
-        pdf=new jsPDF({unit:'px',format:[w,h],orientation:'portrait'});
+        pdf=new jsPDF({unit:'px',format:[pW,pH],orientation:'portrait'});
       }else{
-        pdf.addPage([w,h],'portrait');
+        pdf.addPage([pW,pH],'portrait');
       }
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,w,h);
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,pW,pH);
     }
 
     pdf.save(filename); showToast(filename);
