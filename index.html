@@ -352,7 +352,7 @@ body{font-family:'Montserrat','Segoe UI',sans-serif;background:var(--ui);color:v
   <div class="fs">
     <div class="fs-title">Investimento</div>
     <div class="frow">
-      <div><label class="fl">Preço por kVp (R$)</label><input class="fi" type="number" id="precoKvp" value="3500" min="2000" max="6000" step="100"></div>
+      <div><label class="fl">Preço por kVp (R$)</label><input class="fi" type="number" id="precoKvp" value="3800" min="3200" max="6000" step="100"></div>
       <div><label class="fl">Valor Total (R$) *</label><input class="fi" type="number" id="projectValue" placeholder="Calculado auto"></div>
     </div>
     <div class="frow">
@@ -443,7 +443,7 @@ function fmtN(v){return Number(v).toLocaleString('pt-BR');}
 
 // ── AUTO-CALC ──
 function autoCalc(){
-  const qty=getN('modQty'),pwr=getN('modPower'),precoKvp=getN('precoKvp')||3500;
+  const qty=getN('modQty'),pwr=getN('modPower'),precoKvp=Math.max(3200,getN('precoKvp')||3800);
   const kVp=qty&&pwr?qty*pwr/1000:0;
   $('totalPower').value=kVp>0?kVp.toFixed(2)+' kVp':'';
   if(!$('monthlyGen').dataset.manual&&qty>0)$('monthlyGen').value=Math.round(qty*65);
@@ -475,7 +475,7 @@ document.querySelectorAll('input[name=vend]').forEach(r=>r.addEventListener('cha
 // ── RESET ──
 function resetForm(){
   document.querySelectorAll('.fi,.fta').forEach(i=>{if(i.type!=='radio'&&i.type!=='checkbox')i.value='';});
-  $('validityDays').value=7;$('prazoDias').value=20;$('precoKvp').value=3500;
+  $('validityDays').value=7;$('prazoDias').value=20;$('precoKvp').value=3800;
   $('warPainel').value=25;$('warMicroinv').value=15;$('warInvStr').value=10;$('warInstalacao').value=1;$('warAssistencia').value='Inclusa';
   $('hasWallbox').checked=false;$('wallboxFields').style.display='none';
   $('monthlyGen').removeAttribute('data-manual');$('projectValue').removeAttribute('data-manual');
