@@ -353,7 +353,7 @@ body{font-family:'Montserrat','Segoe UI',sans-serif;background:var(--ui);color:v
   <div class="fs">
     <div class="fs-title">Investimento</div>
     <div class="frow">
-      <div><label class="fl">Preço por kVp (R$)</label><input class="fi" type="number" id="precoKvp" value="3800" min="3200" max="6000" step="100"></div>
+      <div><label class="fl">Preço por kVp (R$) <span id="precoKvpTag" class="auto-tag">mín R$3.100 — string</span></label><input class="fi" type="number" id="precoKvp" value="3500" min="3100" max="6000" step="100"></div>
       <div><label class="fl">Valor Total (R$) *</label><input class="fi" type="number" id="projectValue" placeholder="Calculado auto"></div>
     </div>
     <div class="frow">
@@ -443,13 +443,29 @@ function fmtBRL(v){if(!v&&v!==0)return'—';return'R$\u00a0'+Number(v).toLocaleS
 function fmtN(v){return Number(v).toLocaleString('pt-BR');}
 
 // ── AUTO-CALC ──
+function getPrecoParams(){
+  const isMicroNow=document.querySelector('input[name=invTipo]:checked')?.value==='micro';
+  return isMicroNow?{def:3800,min:3200,label:'mín R$3.200 — micro'}:{def:3500,min:3100,label:'mín R$3.100 — string'};
+}
+function onInvTipoChange(){
+  const p=getPrecoParams();
+  const el=$('precoKvp');
+  el.min=p.min;
+  if(!el.dataset.manual){el.value=p.def;}
+  const tag=$('precoKvpTag');
+  if(tag)tag.textContent=p.label;
+  autoCalc();
+}
 function autoCalc(){
-  const qty=getN('modQty'),pwr=getN('modPower'),precoKvp=Math.max(3200,getN('precoKvp')||3800);
+  const p=getPrecoParams();
+  const qty=getN('modQty'),pwr=getN('modPower');
+  const precoKvp=Math.max(p.min,getN('precoKvp')||p.def);
   const kVp=qty&&pwr?qty*pwr/1000:0;
   $('totalPower').value=kVp>0?kVp.toFixed(2)+' kVp':'';
   if(!$('monthlyGen').dataset.manual&&qty>0)$('monthlyGen').value=Math.round(qty*65);
   if(!$('projectValue').dataset.manual&&kVp>0)$('projectValue').value=Math.round(kVp*precoKvp);
 }
+document.querySelectorAll('input[name=invTipo]').forEach(r=>r.addEventListener('change',onInvTipoChange));
 $('modQty').addEventListener('input',autoCalc);
 $('modPower').addEventListener('input',autoCalc);
 $('precoKvp').addEventListener('input',autoCalc);
@@ -467,6 +483,7 @@ function onInvModelChange(sel){
   const opt=sel.options[sel.selectedIndex];
   const isMicroSel=opt?.dataset?.micro==='1';
   document.querySelector(`input[name=invTipo][value="${isMicroSel?'micro':'string'}"]`).checked=true;
+  onInvTipoChange();
   if(sel.value==='custom'){inp.style.display='block';inp.value='';inp.focus();}
   else{inp.style.display='none';inp.value=sel.value;const pw=opt?.dataset?.power;if(pw){$('invPower').value=pw;}}
 }
@@ -476,7 +493,7 @@ document.querySelectorAll('input[name=vend]').forEach(r=>r.addEventListener('cha
 // ── RESET ──
 function resetForm(){
   document.querySelectorAll('.fi,.fta').forEach(i=>{if(i.type!=='radio'&&i.type!=='checkbox')i.value='';});
-  $('validityDays').value=7;$('prazoDias').value=20;$('precoKvp').value=3800;
+  $('validityDays').value=7;$('prazoDias').value=20;$('precoKvp').value=3500;$('precoKvp').removeAttribute('data-manual');delete $('precoKvp').dataset.manual;
   $('warPainel').value=25;$('warMicroinv').value=15;$('warInvStr').value=10;$('warInstalacao').value=1;$('warAssistencia').value='Inclusa';
   $('hasWallbox').checked=false;$('wallboxFields').style.display='none';
   $('monthlyGen').removeAttribute('data-manual');$('projectValue').removeAttribute('data-manual');
