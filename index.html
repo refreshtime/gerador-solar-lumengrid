@@ -296,6 +296,8 @@ body{font-family:'Montserrat','Segoe UI',sans-serif;background:var(--ui);color:v
       <option value="Huawei SUN2000-5KTL-L1 2MPPT 220V" data-power="5">Huawei SUN2000-5KTL-L1 5kW</option>
       <option value="Huawei SUN2000-6KTL-L1 2MPPT 220V" data-power="6">Huawei SUN2000-6KTL-L1 6kW</option>
       <option value="Huawei SUN2000-8KTL 3MPPT 220V" data-power="8">Huawei SUN2000-8KTL 8kW</option>
+      <option value="Sungrow Trifásico 2MPPT 220V 3kW" data-power="3">Sungrow Trifásico 2MPPT 3kW</option>
+      <option value="Sungrow Trifásico 2MPPT 220V 5kW" data-power="5">Sungrow Trifásico 2MPPT 5kW</option>
       <option value="Hoymiles MI-2250 Microinversor 220V" data-power="2.25" data-micro="1">Hoymiles MI-2250 Microinversor 2.25kW</option>
       <option value="FoxESS Microinversor 4MPPT 220V 2.5kW" data-power="2.5" data-micro="1">FoxESS Microinversor 2.5kW</option>
       <option value="Auxsol Monofásico 2MPPT 220V 5kW" data-power="5">Auxsol Monofásico 5kW</option>
@@ -458,19 +460,21 @@ function onInvTipoChange(){
 }
 function autoCalc(){
   const p=getPrecoParams();
+  const isMicro=document.querySelector('input[name=invTipo]:checked')?.value==='micro';
   const qty=getN('modQty'),pwr=getN('modPower');
   const precoKvp=Math.max(p.min,getN('precoKvp')||p.def);
   const kVp=qty&&pwr?qty*pwr/1000:0;
   $('totalPower').value=kVp>0?kVp.toFixed(2)+' kVp':'';
   if(!$('monthlyGen').dataset.manual&&qty>0)$('monthlyGen').value=Math.round(qty*65);
-  if(!$('projectValue').dataset.manual&&kVp>0)$('projectValue').value=Math.round(kVp*precoKvp);
+  if(kVp>0)$('projectValue').value=Math.round(kVp*precoKvp);
+  // Micro: 1 microinversor a cada 4 placas
+  if(isMicro&&qty>0)$('invQty').value=Math.ceil(qty/4);
 }
 document.querySelectorAll('input[name=invTipo]').forEach(r=>r.addEventListener('change',onInvTipoChange));
 $('modQty').addEventListener('input',autoCalc);
 $('modPower').addEventListener('input',autoCalc);
 $('precoKvp').addEventListener('input',autoCalc);
 $('monthlyGen').addEventListener('input',function(){this.dataset.manual='1';});
-$('projectValue').addEventListener('input',function(){this.dataset.manual='1';});
 
 // ── DROPDOWN HANDLERS ──
 function onModModelChange(sel){
@@ -496,7 +500,7 @@ function resetForm(){
   $('validityDays').value=7;$('prazoDias').value=20;$('precoKvp').value=3500;$('precoKvp').removeAttribute('data-manual');delete $('precoKvp').dataset.manual;
   $('warPainel').value=25;$('warMicroinv').value=15;$('warInvStr').value=10;$('warInstalacao').value=1;$('warAssistencia').value='Inclusa';
   $('hasWallbox').checked=false;$('wallboxFields').style.display='none';
-  $('monthlyGen').removeAttribute('data-manual');$('projectValue').removeAttribute('data-manual');
+  $('monthlyGen').removeAttribute('data-manual');
   document.querySelector('input[name=installType][value="Residencial"]').checked=true;
   document.querySelector('input[name=vend][value="lucas"]').checked=true;
   $('vendCustom').style.display='none';
@@ -725,11 +729,15 @@ function generateProposal(){
   </div>`;
 
   // ── PAGE 3: SISTEMA SOLAR ──
+  const getBrand=m=>m?(m.split(' ')[0]||''):'';
+  const invBrand=getBrand(invModel);
+  const modBrand=getBrand(modModel);
+  const invLabel=(isMicro?'Microinversor':'Inversor On-Grid')+(invBrand?' '+invBrand:'');
   const s='padding:8px 12px;font-size:11px;border-bottom:1px solid #f0f0f0;';
   const specItems=[
     kVp?{label:'Potência do Sistema',qty:'—',spec:kVp.toFixed(2)+' kWp',hero:true}:null,
-    modQty&&modModel?{label:'Módulos Fotovoltaicos',qty:modQty+' un.',spec:modModel+(modPower?' · '+modPower+' W':'')}:null,
-    invQty?{label:(invQty>1?'Inversores':'Inversor')+' On-Grid',qty:invQty+' un.',spec:(invModel||'Inversor String')+(invPower?' · '+invPower+' kW':'')}:null,
+    modQty&&modModel?{label:'Módulos Fotovoltaicos'+(modBrand?' '+modBrand:''),qty:modQty+' un.',spec:modModel+(modPower?' · '+modPower+' W':'')}:null,
+    invQty?{label:invLabel,qty:invQty+' un.',spec:(invModel||'Inversor String')+(invPower?' · '+invPower+' kW':'')}:null,
     {label:'Estrutura de Fixação',  qty:'✓', spec:'Alumínio anodizado — conforme projeto'},
     {label:'Cabeamento CC / CA',    qty:'✓', spec:'Fio solar 6mm² certificado ABNT'},
     {label:'String Box CC',         qty:'✓', spec:'Proteção com DPS e fusíveis'},
