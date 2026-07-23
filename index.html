@@ -518,6 +518,7 @@ function onInvModelChange(sel){
   onInvTipoChange();
   if(sel.value==='custom'){inp.style.display='block';inp.value='';inp.focus();}
   else{inp.style.display='none';inp.value=sel.value;const pw=opt?.dataset?.power;if(pw){$('invPower').value=pw;}}
+  calcOverload(); // recalcula com invPower já atualizado
 }
 $('hasWallbox').addEventListener('change',function(){$('wallboxFields').style.display=this.checked?'':'none';});
 document.querySelectorAll('input[name=vend]').forEach(r=>r.addEventListener('change',function(){$('vendCustom').style.display=this.value==='custom'?'':'none';}));
