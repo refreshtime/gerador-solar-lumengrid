@@ -460,7 +460,7 @@ function fmtN(v){return Number(v).toLocaleString('pt-BR');}
 // ── AUTO-CALC ──
 function getPrecoParams(){
   const isMicroNow=document.querySelector('input[name=invTipo]:checked')?.value==='micro';
-  return isMicroNow?{def:3800,min:3200,label:'mín R$3.200 — micro'}:{def:3500,min:3100,label:'mín R$3.100 — string'};
+  return isMicroNow?{def:3500,min:3200,label:'mín R$3.200 — micro'}:{def:3300,min:3000,label:'mín R$3.000 — string'};
 }
 function onInvTipoChange(){
   const p=getPrecoParams();
