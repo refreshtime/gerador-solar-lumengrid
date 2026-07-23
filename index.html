@@ -1055,6 +1055,8 @@ function printPDF(){
   window.print();
   document.title=orig;
 }
+// Inicializa modelo padrão (Jinko) no carregamento da página
+(function(){const s=$('modModelSel');if(s)onModModelChange(s);})();
 </script>
 </body>
 </html>
