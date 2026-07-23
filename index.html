@@ -277,8 +277,9 @@ body{font-family:'Montserrat','Segoe UI',sans-serif;background:var(--ui);color:v
       <div><label class="fl">Potência (W)</label><input class="fi" type="number" id="modPower" placeholder="Ex: 550" min="0"></div>
     </div>
     <label class="fl">Modelo do Módulo</label>
-    <select class="fsel" onchange="onModModelChange(this)">
+    <select class="fsel" id="modModelSel" onchange="onModModelChange(this)">
       <option value="">— Selecionar —</option>
+      <option value="JKM620N-66HL4M BDV — Módulo Bifacial 620W JINKO (Ef. 22.95% / Frame Alumínio)" data-power="620" selected>Jinko Bifacial 620W — JKM620N-66HL4M BDV (22.95%) ★ padrão</option>
       <option value="Maxeon Bifacial PERC 535W" data-power="535">Maxeon Bifacial PERC 535W</option>
       <option value="Maxeon Bifacial PERC 550W" data-power="550">Maxeon Bifacial PERC 550W</option>
       <option value="Ronma Solar N-Type 590W Black Frame" data-power="590">Ronma Solar N-Type 590W Black Frame</option>
@@ -352,6 +353,15 @@ body{font-family:'Montserrat','Segoe UI',sans-serif;background:var(--ui);color:v
       <div><label class="fl">Tarifa (R$/kWh)</label><input class="fi" type="number" id="tarifa" placeholder="Ex: 0.95" step="0.01"></div>
       <div><label class="fl">Economia mensal (R$) <span class="auto-tag">auto</span></label><input class="fi" type="number" id="ecoOverride" placeholder="Calculado auto"></div>
     </div>
+  </div>
+
+  <div class="fs">
+    <div class="fs-title">Página de Geração de Energia</div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0">
+      <input type="checkbox" id="showGeracaoPage" checked style="width:16px;height:16px;accent-color:var(--or);cursor:pointer">
+      <span style="font-size:12px;color:var(--text)">Incluir página de geração de energia na proposta</span>
+    </label>
+    <div style="font-size:10px;color:var(--muted);margin-top:-4px">Exibe kWh/mês gerado, CO₂ evitado e projeção anual. <strong>Ativo por padrão.</strong></div>
   </div>
 
   <div class="fs">
@@ -507,6 +517,10 @@ function resetForm(){
   document.querySelector('input[name=vend][value="lucas"]').checked=true;
   $('vendCustom').style.display='none';
   $('preview').style.display='none';$('prevEmpty').style.display='';
+  // Restaurar padrão Jinko 620W
+  const sel=$('modModelSel');
+  sel.selectedIndex=1;
+  onModModelChange(sel);
 }
 
 // ── PAGE BUILDERS ──
@@ -870,7 +884,59 @@ function generateProposal(){
     ${footer(today)}
   </div>`;
 
-  // ── PAGE 4: INVESTIMENTO ──
+  // ── PAGE 4: GERAÇÃO DE ENERGIA ──
+  const showGeracao=$('showGeracaoPage')?.checked!==false;
+  const p4=showGeracao&&genKwhNum?`<div class="page p-light">
+    ${corners()}
+    ${topbar(pg++,tot)}
+    <div class="p-body" style="justify-content:space-between">
+      <div>
+        <div class="sec-eye">Geração de Energia</div>
+        <div class="sec-h2">Sua energia produzida <span style="color:var(--or)">todo mês</span></div>
+        <div class="sec-rule"></div>
+      </div>
+      <!-- KPIs de geração -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:4px">
+        <div style="background:linear-gradient(135deg,rgba(232,100,26,.08),rgba(232,100,26,.03));border:1.5px solid rgba(232,100,26,.25);border-radius:12px;padding:18px 14px;text-align:center">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--or);margin-bottom:8px">Geração Mensal</div>
+          <div style="font-size:32px;font-weight:900;color:var(--ltext);line-height:1">${fmtN(genKwhNum)}</div>
+          <div style="font-size:11px;color:var(--lmuted);margin-top:4px">kWh / mês</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(232,100,26,.08),rgba(232,100,26,.03));border:1.5px solid rgba(232,100,26,.25);border-radius:12px;padding:18px 14px;text-align:center">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--or);margin-bottom:8px">Geração Anual</div>
+          <div style="font-size:32px;font-weight:900;color:var(--ltext);line-height:1">${fmtN(genAnual)}</div>
+          <div style="font-size:11px;color:var(--lmuted);margin-top:4px">kWh / ano</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(39,174,96,.08),rgba(39,174,96,.03));border:1.5px solid rgba(39,174,96,.25);border-radius:12px;padding:18px 14px;text-align:center">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#27ae60;margin-bottom:8px">CO₂ Evitado/ano</div>
+          <div style="font-size:32px;font-weight:900;color:#27ae60;line-height:1">${(co2).toFixed(0)}</div>
+          <div style="font-size:11px;color:var(--lmuted);margin-top:4px">kg CO₂ / ano</div>
+        </div>
+      </div>
+      <!-- Barra de geração mensal -->
+      <div style="background:#fff;border:1px solid var(--lborder);border-radius:10px;padding:16px 20px">
+        <div style="font-size:10px;font-weight:800;color:var(--or);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Estimativa de Geração Mensal</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m,i)=>{
+            const fator=[1.05,1.0,0.98,0.92,0.85,0.80,0.82,0.88,0.95,1.02,1.05,1.07][i];
+            const val=Math.round(genKwhNum*fator);
+            const pct=Math.round((val/(genKwhNum*1.1))*100);
+            return`<div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:9px;font-weight:700;color:var(--lmuted);width:22px">${m}</div>
+              <div style="flex:1;background:rgba(232,100,26,.1);border-radius:4px;height:12px;overflow:hidden">
+                <div style="width:${pct}%;background:var(--or);height:100%;border-radius:4px"></div>
+              </div>
+              <div style="font-size:9px;font-weight:700;color:var(--ltext);width:52px;text-align:right">${fmtN(val)} kWh</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div style="font-size:8px;color:var(--lmuted);font-style:italic">Estimativa baseada em irradiação média regional. Valores reais podem variar conforme condições climáticas locais e inclinação do telhado.</div>
+    </div>
+    ${footer(today)}
+  </div>`:'';
+
+  // ── PAGE 5: INVESTIMENTO ──
   const p5=`<div class="page p-light">
     ${corners()}
     ${topbar(pg++,tot)}
@@ -961,7 +1027,7 @@ function generateProposal(){
     ${footer(today)}
   </div>`;
 
-  const html=p1+p2+p3+p5+p6;
+  const html=p1+p2+p3+p4+p5+p6;
   $('preview').innerHTML=html;
   $('preview').style.display='block';
   $('prevEmpty').style.display='none';
